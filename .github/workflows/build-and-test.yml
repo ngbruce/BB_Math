@@ -1,0 +1,69 @@
+# CI/CD 工作流（仅用于自动化构建和测试）
+# 本项目使用传统的 .NET Framework，不推荐在本地使用命令行运行测试
+# 请在 Visual Studio 2019 中运行测试：测试 → 测试资源管理器 → 运行全部
+
+name: Build and Test
+
+on:
+  push:
+    branches: [ master, main, develop ]
+  pull_request:
+    branches: [ master, main, develop ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.3
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1.2
+
+    - name: Restore NuGet packages
+      run: nuget restore BB_Math.sln
+
+    - name: Build Debug
+      run: msbuild BB_Math.sln -p:Configuration=Debug -t:Rebuild -m
+
+    - name: Build Release
+      run: msbuild BB_Math.sln -p:Configuration=Release -t:Rebuild -m
+
+    - name: Run Tests
+      run: |
+        $testRunner = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
+        if (-not (Test-Path $testRunner)) {
+          $testRunner = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
+        }
+        if (-not (Test-Path $testRunner)) {
+          $testRunner = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
+        }
+        if (-not (Test-Path $testRunner)) {
+          Write-Error "vstest.console.exe not found"
+          exit 1
+        }
+        & $testRunner "BBMath.Tests\bin\Debug\BBMath.Tests.dll" /Logger:trx;LogFileName=test-results.trx /Verbose
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: TestResults/test-results.trx
+        retention-days: 30
+
+    - name: Publish Test Results
+      if: always()
+      uses: dorny/test-reporter@v1
+      with:
+        name: MSTest Tests
+        path: TestResults/**/*.trx
+        reporter: mstest-trx
+        fail-on-error: true
+        max-annotations: 10
+
