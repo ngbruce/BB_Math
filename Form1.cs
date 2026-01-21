@@ -1612,5 +1612,11 @@ namespace BBMath.Application
 
             LoggerHelper.Debug("已重置为初始状态，可以重新开始答题");
         }
+
+		private void llbTaoBao_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+		{
+            llbTaoBao.LinkVisited = true;
+            Process.Start("IExplore", "https://item.taobao.com/item.htm?id=965373226783");
+        }
 	}
 }

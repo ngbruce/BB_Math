@@ -56,6 +56,7 @@
 			this.butBS = new System.Windows.Forms.Button();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tpAbout = new System.Windows.Forms.TabPage();
+			this.llbTaoBao = new System.Windows.Forms.LinkLabel();
 			this.tbOriOpenSrcDeclare = new System.Windows.Forms.TextBox();
 			this.tbWechat = new System.Windows.Forms.TextBox();
 			this.pbOriWechatQCode = new System.Windows.Forms.PictureBox();
@@ -436,6 +437,7 @@
 			// 
 			this.tpAbout.AutoScroll = true;
 			this.tpAbout.BackColor = System.Drawing.Color.Transparent;
+			this.tpAbout.Controls.Add(this.llbTaoBao);
 			this.tpAbout.Controls.Add(this.tbOriOpenSrcDeclare);
 			this.tpAbout.Controls.Add(this.tbWechat);
 			this.tpAbout.Controls.Add(this.pbOriWechatQCode);
@@ -455,6 +457,17 @@
 			this.tpAbout.Size = new System.Drawing.Size(356, 474);
 			this.tpAbout.TabIndex = 4;
 			this.tpAbout.Text = "原作说明";
+			// 
+			// llbTaoBao
+			// 
+			this.llbTaoBao.AutoSize = true;
+			this.llbTaoBao.Location = new System.Drawing.Point(222, 526);
+			this.llbTaoBao.Name = "llbTaoBao";
+			this.llbTaoBao.Size = new System.Drawing.Size(104, 16);
+			this.llbTaoBao.TabIndex = 12;
+			this.llbTaoBao.TabStop = true;
+			this.llbTaoBao.Text = "点击打开链接";
+			this.llbTaoBao.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.llbTaoBao_LinkClicked);
 			// 
 			// tbOriOpenSrcDeclare
 			// 
@@ -1135,6 +1148,7 @@
 		private System.Windows.Forms.PictureBox pbOriTiktokChinaQCode;
 		private System.Windows.Forms.TextBox tbRednote;
 		private System.Windows.Forms.Label label15;
+		private System.Windows.Forms.LinkLabel llbTaoBao;
 	}
 }
 
