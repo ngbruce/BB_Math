@@ -3,7 +3,7 @@
 ![.NET](https://img.shields.io/badge/.NET-4.6.2-purple)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![Tests](https://img.shields.io/badge/tests-219%20passing-brightgreen)
-![Version](https://img.shields.io/badge/version-v7.1.2-orange)
+![Version](https://img.shields.io/badge/version-v7.1.3-orange)
 
 # 软件使用说明
 
