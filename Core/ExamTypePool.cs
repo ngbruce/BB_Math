@@ -132,5 +132,22 @@ namespace BBMath.Core
         {
             _typeCounts.Clear();
         }
+
+        /// <summary>
+        /// 向指定题型追加题目数量（用于答错惩罚直接追加到错题型）
+        /// </summary>
+        /// <param name="type">题型</param>
+        /// <param name="count">追加数量</param>
+        public void AddToType(ExamType type, int count)
+        {
+            if (_typeCounts.ContainsKey(type))
+            {
+                _typeCounts[type] += count;
+            }
+            else
+            {
+                _typeCounts[type] = count;
+            }
+        }
     }
 }

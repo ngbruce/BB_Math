@@ -100,7 +100,10 @@ namespace BBMath.Application
         }
         /// <summary>
         /// 答题
+        /// [Obsolete] 此方法已废弃，答题逻辑已迁移到 MainFormPresenter.ValidateAnswer()。
+        /// 保留仅用于参考和紧急回退。
         /// </summary>
+        [Obsolete("答题逻辑已迁移到 MainFormPresenter.ValidateAnswer()，此方法不应被调用", false)]
         public void answer()
         {
             GameStateManager.flagPause = false;
@@ -622,9 +625,10 @@ namespace BBMath.Application
                 //题型信息打印
                 foreach (ExamObject obj in GameStateManager.lstExamObjects)
                 {
+                    obj.SumQty = obj.CorrectQty + obj.WrongQty;
                     if (obj.SumQty > 0)
                     {
-                        strLog += "<--题型-->   " + obj.Description + "  , \t剩余：" + obj.TotalQty.ToString() + ", 正确：" + obj.CorrectQty.ToString() + ", 错误：" + obj.WrongQty.ToString() + "\r\n";
+                        strLog += "<--题型-->   " + obj.Description + "  , 总数：" + obj.SumQty.ToString() + ", 正确：" + obj.CorrectQty.ToString() + ", 错误：" + obj.WrongQty.ToString() + "\r\n";
                         strLog += "   耗时(秒)：" + obj.ElapsedTime.ToString() + " , 平均：" + ((double)obj.ElapsedTime / obj.SumQty).ToString("f2") + "\r\n";
                     }
                 }
@@ -751,9 +755,9 @@ namespace BBMath.Application
 
             if (int.TryParse(tbTtlExamToDo.Text, out GameStateManager.examTtl))
             {
-                timer2.Enabled = true;                          //进程检查定时器
-                GameStateManager.examTtlRec = GameStateManager.examTtl;             //记录原始题数，用于无错奖励
+                timer2.Enabled = false;  // 进程检查已禁用: Process.GetProcesses() 枚举全部进程会卡 UI 线程。如要恢复需改用后台线程。
 
+                GameStateManager.examTtlRec = GameStateManager.examTtl;             //记录原始题数，用于无错奖励
                 // 重置暂停时间和暂停次数为配置值（Configuration Value）
                 // 将运行时值（Runtime Value）重置为固定的配置值
                 GameStateManager.pauseSecLeft = GameStateManager.pauseSecondsLeftConfig;
@@ -795,8 +799,32 @@ namespace BBMath.Application
 
         private void button2_Click(object sender, EventArgs e)
         {
-            // 保持原有的answer()方法调用，确保所有功能正常
-            answer();
+            GameStateManager.flagPause = false;
+            int tmpResult = 0;
+            int tmpRemainder = 0;
+
+            bool resultForCheck = int.TryParse(tbResult.Text, out tmpResult);
+            bool remainderForCheck = int.TryParse(tbRemainder.Text, out tmpRemainder);
+            bool textBoxCheckOK = false;
+
+            if (GameStateManager.lstExamObjects[GameStateManager.currentTypeIndex].Examtype == ExamType.DivisionWithRemainder)
+            {
+                textBoxCheckOK = resultForCheck && remainderForCheck;
+            }
+            else
+            {
+                textBoxCheckOK = resultForCheck;
+            }
+
+            if (textBoxCheckOK)
+            {
+                _presenter.ValidateAnswer(tmpResult, tmpRemainder);
+            }
+            else
+            {
+                tbResult.Text = "";
+                tbResult.Select();
+            }
         }
 
         private void tbResult_KeyDown(object sender, KeyEventArgs e)
@@ -1147,8 +1175,7 @@ namespace BBMath.Application
                 GameStateManager.examTtl++;
                 GameStateManager.lstExamObjects[GameStateManager.currentTypeIndex].TotalQty += 1;
 
-                // 重新初始化题型池，确保题型分布均匀
-                _presenter.ReinitializeExamTypePool();
+                _presenter.AddTimeoutPenalty();
 
                 UpdateDisp();
             }
@@ -1467,6 +1494,40 @@ namespace BBMath.Application
         }
 
         /// <summary>
+        /// 停止定时器并记录本题用时
+        /// </summary>
+        public void StopTimerAndRecordElapsed()
+        {
+            timer1.Stop();
+            GameStateManager.lstExamObjects[GameStateManager.currentTypeIndex].ElapsedTime +=
+                GameStateManager.lstExamObjects[GameStateManager.currentTypeIndex].TimeLimit - counterTimeOut;
+        }
+
+        /// <summary>
+        /// 刷新所有界面显示
+        /// </summary>
+        public void UpdateAllDisplays()
+        {
+            UpdateDisp();
+        }
+
+        /// <summary>
+        /// 显示"再练一次"按钮
+        /// </summary>
+        public void ShowDoAgainButton()
+        {
+            btnDoAgain.Visible = true;
+        }
+
+        /// <summary>
+        /// 执行存盘操作
+        /// </summary>
+        public void ExecuteSave()
+        {
+            save();
+        }
+
+        /// <summary>
         /// 初始化难度选择下拉框
         /// </summary>
         private void InitializeDifficultyComboBox()
@@ -1618,5 +1679,13 @@ namespace BBMath.Application
             llbTaoBao.LinkVisited = true;
             Process.Start("IExplore", "https://item.taobao.com/item.htm?id=965373226783");
         }
+
+		private void tbRemainder_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.KeyCode == Keys.Enter)
+			{
+				button2_Click(sender, e);
+			}
+		}
 	}
 }

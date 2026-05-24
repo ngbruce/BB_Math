@@ -758,6 +758,7 @@
 			this.tbRemainder.Visible = false;
 			this.tbRemainder.TextChanged += new System.EventHandler(this.tbHelp_TextChanged);
 			this.tbRemainder.Enter += new System.EventHandler(this.tbHelp_Enter);
+			this.tbRemainder.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tbRemainder_KeyDown);
 			// 
 			// lbHour
 			// 

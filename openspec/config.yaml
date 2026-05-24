@@ -1,0 +1,90 @@
+schema: spec-driven
+
+context: |
+  ## 项目简介
+  BB_Math（BB数学）是一款面向儿童的小学数学练习软件，支持加法、减法、乘法、
+  有余数除法、无余数除法五种题型，提供难度选择、金币奖励机制、暂停机制等功能。
+
+  ## 技术栈
+  - 语言: C# 7.0+
+  - 框架: .NET Framework 4.6.2
+  - UI: Windows Forms (WinForms)
+  - 架构: MVP (Model-View-Presenter) 模式
+  - 配置: INI 文件 (bbmath.cfg)
+  - 日志: 文本文件 (bbmath.dat)，按日期轮转，单文件最大 10MB
+  - 测试: MSTest (BBMath.Tests/)
+  - 无第三方依赖
+
+  ## 架构模式
+  - UI 层: Form1 实现 IMainFormView 接口，通过 MainFormPresenter 处理业务逻辑
+  - 业务层: GameStateManager（静态类，全局状态）、MathProblemGenerator（策略模式）
+  - 配置层: IConfigurationService → IniConfigurationService
+  - 所有公开类和方法必须包含 XML 文档注释（中文）
+
+  ## 命名规范
+  - 类名、方法名、公共成员: PascalCase
+  - 局部变量、私有字段: _camelCase
+  - UI 控件: 匈牙利命名法（tbResult, btnStart, lbCoinTTL 等）
+  - 命名空间: BBMath.Core / BBMath.UI / BBMath.Application / BBMath.Configuration
+
+  ## 核心概念
+  - ExamType 枚举: Addition, Subtraction, Multiplication, DivisionNoRemainder, DivisionWithRemainder
+  - ExamObject: 封装题型配置（百分比、时间限制、正确/错误统计）
+  - GameStateManager: 静态全局状态（金币、题型、暂停、进度）
+  - 难度级别: LV1(个位数加减) → LV5(三位数四则)
+
+  ## 开发环境约束
+  - VS Code: 仅用于代码编写和文档维护，不能编译和调试 C# 工程
+  - Visual Studio 2019: 所有编译、调试、运行、窗体设计必须在此完成
+  - 禁止修改 *.Designer.cs 文件（由窗体设计器生成）
+  - 新增代码文件后，必须在 VS 2019 中手动添加到项目
+  - 硬编码常量必须在 Core/AppConstants.cs 中定义
+
+  ## 现有文档
+  - 功能行为规范: openspec/specs/ (15 个能力规范)
+  - 实现参考: 源代码 XML 注释（类/接口/方法签名在 .cs 文件中）
+  - 变更记录: CHANGELOG.md
+  - 用户文档: README.md, bin/Release/使用说明.pdf
+
+  ## 文档导航
+  | 需求 | 位置 |
+  |------|------|
+  | AI 开发约束（技术栈、命名、规则） | `openspec/config.yaml` context 字段 |
+  | 功能行为规范（系统 SHALL 做什么） | `openspec/specs/` |
+  | 实现参考（类签名、接口、方法） | 源代码 `.cs` 文件（XML 注释） |
+  | 用户文档 | `README.md`, `bin/Release/使用说明.pdf` |
+  | 变更管理 | `openspec/changes/`，使用 `openspec-cn` 命令 |
+
+  ## 核心架构
+  ```
+  Form1 (View) ←→ MainFormPresenter (业务逻辑) ←→ Core/ (GameStateManager, MathProblemGenerator...)
+         ↕
+     IMainFormView 接口
+  ```
+
+  ## 场景化查阅指引
+  | 场景 | 查阅位置 |
+  |------|---------|
+  | 了解功能行为 | `openspec/specs/[capability]/spec.md` |
+  | 查询 API 签名 | 源代码 `.cs` 文件（XML 注释） |
+  | 确认命名/约束 | 本文档（context 字段） |
+  | 修改窗体/控件 | 下文"窗体修改流程" |
+
+  ## 窗体/控件修改流程
+  AI 需要修改窗体或控件时，必须：
+  1. **暂停编程**，提供详细操作说明
+  2. **要求用户在 VS 2019 设计器中手动完成**
+  3. **等待用户确认**后再继续
+
+  ## 额外禁止事项
+  - 直接实例化服务类（必须使用依赖注入）
+  - 在窗体设计器中添加/修改控件或事件处理函数
+
+  ## OpenSpec 工作流备忘
+  - 创建变更: `/opsx-propose <name>` → 实现: `/opsx-apply [name]` → 归档: `/opsx-archive [name]`
+  - 归档变更必须使用 `openspec-cn archive <name> --yes`，它会自动解析 delta specs、
+    合并到主规范并在验证通过后移动目录。**不得**手动 `mv`/`Move-Item`。
+  - `.opencode/skills/` 下的技能文档由 openspec-cn 生成，可能被覆盖，AI 应以 CLI
+    命令的实际功能为准。
+  - **本项目不生成 AGENTS.md**。项目上下文统一在 `openspec/config.yaml` 中管理。
+    AGENTS.md 是 openspec-cn init 之外的用户文件，本项目不需要它。

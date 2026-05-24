@@ -156,17 +156,10 @@ namespace BBMath.UI
         {
             try
             {
-                // 获取当前难度配置
                 var difficultyConfig = DifficultyConfigurationManager.GetConfig(GameStateManager.currentDifficulty);
-
-                // 记录重新初始化前的题型池状态
                 var oldTypeCounts = _examTypePool.GetTypeCounts();
                 _logger.Info($"重新初始化题型池 - 加题后总题目数: {GameStateManager.examTtl}");
-
-                // 重新分配题型数量
                 _examTypePool.Initialize(GameStateManager.examTtl, difficultyConfig.SupportedOperations);
-
-                // 打印重新分配后的题型情况
                 var newTypeCounts = _examTypePool.GetTypeCounts();
                 _logger.Debug($"题型池重新分配完成 - 题型种类数: {difficultyConfig.SupportedOperations.Count}");
                 foreach (var kvp in newTypeCounts)
@@ -179,6 +172,15 @@ namespace BBMath.UI
                 _logger.Error($"重新初始化题型池失败：{ex.Message}");
                 _logger.Exception(ex);
             }
+        }
+
+        /// <summary>
+        /// 超时惩罚：向当前题型池追加 1 题（轻量操作，替代昂贵的全量重新分配）
+        /// </summary>
+        public void AddTimeoutPenalty()
+        {
+            var examType = GameStateManager.lstExamObjects[CurrentExamTypeIndex].Examtype;
+            _examTypePool.AddToType(examType, 1);
         }
 
         /// <summary>
@@ -417,26 +419,16 @@ namespace BBMath.UI
         /// </summary>
         private void HandleCorrectAnswer()
         {
-            GameStateManager.correct++;
-            GameStateManager.examTtl--;
+            _view.StopTimerAndRecordElapsed();
 
-            // 奖励金币
-            if (GameStateManager.awardCoin > 0)
-            {
-                GameStateManager.coinTtl += GameStateManager.awardCoin;
-            }
-
-            // 更新视图
-            _view.UpdateStatistics(
-                GameStateManager.correct,
-                GameStateManager.wrong,
-                GameStateManager.examTtl,
-                GameStateManager.coinTtl
-            );
+            GameStateManager.examTtl -= 1;
+            GameStateManager.lstExamObjects[CurrentExamTypeIndex].TotalQty -= 1;
+            GameStateManager.correct += 1;
+            GameStateManager.lstExamObjects[CurrentExamTypeIndex].CorrectQty += 1;
+            GameStateManager.coinTtl += GameStateManager.awardCoin;
 
             _view.RecordCorrectAnswer(Equation, Result, NumHalfResult);
 
-            // 检查是否完成
             if (GameStateManager.examTtl <= 0)
             {
                 HandleExamCompletion();
@@ -444,6 +436,7 @@ namespace BBMath.UI
             else
             {
                 GenerateProblem();
+                _view.UpdateAllDisplays();
                 _view.ClearAnswerInput();
             }
         }
@@ -455,26 +448,22 @@ namespace BBMath.UI
         /// <param name="userRemainder">用户输入的余数</param>
         private void HandleWrongAnswer(int userResult, int userRemainder)
         {
-            GameStateManager.wrong++;
+            _view.StopTimerAndRecordElapsed();
 
-            // 惩罚机制：加时
-            if (GameStateManager.lstExamObjects[CurrentExamTypeIndex].TimeLimit > 0)
-            {
-                var examObject = GameStateManager.lstExamObjects[CurrentExamTypeIndex];
-                // 增加当前题型的用时
-                // 这里可以根据实际需求实现具体的惩罚逻辑
-            }
+            GameStateManager.examTtl += GameStateManager.punishment - 1;
+            GameStateManager.lstExamObjects[CurrentExamTypeIndex].TotalQty += GameStateManager.punishment;
+            GameStateManager.wrong += 1;
+            GameStateManager.lstExamObjects[CurrentExamTypeIndex].WrongQty += 1;
 
-            // 更新视图
-            _view.UpdateStatistics(
-                GameStateManager.correct,
-                GameStateManager.wrong,
-                GameStateManager.examTtl,
-                GameStateManager.coinTtl
-            );
+            _examTypePool.AddToType(GameStateManager.lstExamObjects[CurrentExamTypeIndex].Examtype, GameStateManager.punishment);
 
             _view.RecordWrongAnswer(Equation, userResult, userRemainder, Result, NumHalfResult);
+
             _view.ShowErrorAnswerDialog(Equation, userResult, userRemainder, Result, NumHalfResult);
+
+            GenerateProblem();
+            _view.UpdateAllDisplays();
+            _view.ClearAnswerInput();
         }
 
         /// <summary>
@@ -484,26 +473,42 @@ namespace BBMath.UI
         {
             GameStateManager.finished = true;
 
-            // 计算统计信息
-            int totalQuestions = GameStateManager.correct + GameStateManager.wrong;
-            double accuracy = totalQuestions > 0 ? (double)GameStateManager.correct / totalQuestions * 100 : 0;
+            _view.UpdateStatistics(
+                GameStateManager.correct,
+                GameStateManager.wrong,
+                GameStateManager.examTtl,
+                GameStateManager.coinTtl
+            );
 
-            // 全对额外奖励（题目数量的1/2，向下取整）
+            _view.DisableExamControls();
+            _view.UpdateCompletionTime();
+
+            int totalQuestions = GameStateManager.correct + GameStateManager.wrong;
+            _view.UpdateAverageTimeCost(totalQuestions);
+
             if (GameStateManager.wrong == 0 && GameStateManager.examTtlRec > 0)
             {
                 int bonus = (int)(GameStateManager.examTtlRec * AppConstants.FullAnswerBonusCoefficient);
                 GameStateManager.coinTtl += bonus;
+                _view.UpdateCoinDisplay(GameStateManager.coinTtl);
                 _view.ShowBonusDialog(bonus);
             }
 
-            _view.DisableExamControls();
-            _view.UpdateCompletionTime();
-            _view.UpdateAverageTimeCost(totalQuestions);
+            _view.ExecuteSave();
+            _view.ShowDoAgainButton();
 
-            // 保存练习记录
-            SavePracticeRecord();
-
+            int totalQ = GameStateManager.correct + GameStateManager.wrong;
+            double accuracy = totalQ > 0 ? (double)GameStateManager.correct / totalQ * 100 : 0;
             _logger.Info($"练习完成 - 正确：{GameStateManager.correct}，错误：{GameStateManager.wrong}，正确率：{accuracy:F2}%");
+
+            foreach (var obj in GameStateManager.lstExamObjects)
+            {
+                int sum = obj.CorrectQty + obj.WrongQty;
+                if (sum > 0)
+                {
+                    _logger.Info($"  分题型统计 - {obj.Description}: 总数：{sum}, 正确：{obj.CorrectQty}, 错误：{obj.WrongQty}");
+                }
+            }
         }
 
         /// <summary>
@@ -732,5 +737,25 @@ namespace BBMath.UI
         /// 重置答题定时器
         /// </summary>
         void ResetTimer();
+
+        /// <summary>
+        /// 停止定时器并记录本题用时
+        /// </summary>
+        void StopTimerAndRecordElapsed();
+
+        /// <summary>
+        /// 刷新所有界面显示
+        /// </summary>
+        void UpdateAllDisplays();
+
+        /// <summary>
+        /// 显示"再练一次"按钮
+        /// </summary>
+        void ShowDoAgainButton();
+
+        /// <summary>
+        /// 执行存盘操作
+        /// </summary>
+        void ExecuteSave();
     }
 }

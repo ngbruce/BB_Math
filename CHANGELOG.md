@@ -5,6 +5,31 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [7.1.4] - 2026-05-24
+
+### 新增
+- ExamTypePool.AddToType() 方法：答错惩罚题目直接追加到错题型池
+- 题型日志输出"总数"字段（SumQty），便于查看各题型答题量
+- 余数输入框 tbRemainder 支持 KeyDown 事件，与主输入框行为一致
+
+### 修复
+- 禁用进程黑名单监控定时器（timer2）：Process.GetProcesses() 枚举全部进程会卡 UI 线程
+
+### 改进
+- 答题入口统一：button2_Click 直接调用 `_presenter.ValidateAnswer()`，废弃遗留的 `answer()` 方法
+- `answer()` 方法标记 `[Obsolete("答题逻辑已迁移到 MainFormPresenter.ValidateAnswer()")]`
+
+### 文档
+- 删除冗余文档：移除 `docs/API_REFERENCE.md`（源代码 XML 注释已覆盖）、`docs/TESTING.md`（README 已覆盖）、`docs/CODING_STANDARDS.md`（已合并到 config.yaml）
+- 合并开发规范：将 CODING_STANDARDS 中的场景导航表、窗体修改流程、额外禁止事项迁移到 `openspec/config.yaml`
+- 简化 `openspec/project.md` 为项目上下文重定向页
+- 清理已归档变更的旧文件（refactor-mvp-architecture 旧路径）
+- 更新 README 文档引用和项目结构树
+- 更新 PR 模板编码规范链接至 `openspec/config.yaml`
+
+### 移除
+- 移除全局 `AGENTS.md` 和 `openspec/AGENTS.md`（项目上下文统一在 config.yaml 管理）
+
 ## [7.1.3] - 2026-01-21
 
 ### 改进

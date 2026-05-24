@@ -54,30 +54,28 @@ BB_Math 项目在历史演进中尝试引入 MVP（Model-View-Presenter）架构
 - **重构为单元测试**：工作量过大，超出本次重构范围
 - **保留为注释**：不利于代码阅读，不如 `[Obsolete]` 标记
 
-### Decision 2: Presenter 直接调用 View 的 UI 控件
-**决策**：在 `HandleCorrectAnswer()` 和 `HandleWrongAnswer()` 中，Presenter 直接调用 View 的 TextBox 控件（`tbCorrect.AppendText()` 和 `tbRecord.AppendText()`），而不是通过 `IMainFormView` 接口方法
+### Decision 2: Presenter 通过 IMainFormView 接口方法记录到 UI
+**决策**：保留 `IMainFormView` 接口中的 `RecordCorrectAnswer()` 和 `RecordWrongAnswer()` 方法，Presenter 通过接口调用进行 UI 记录。
 
 **理由**：
-- 记录功能是 UI 层的显示逻辑，不属于业务逻辑
-- 接口方法 `RecordCorrectAnswer()` 和 `RecordWrongAnswer()` 在历史尝试中未生效
-- 直接调用更直观，减少接口层的抽象复杂度
+- WinForms 设计器生成的 TextBox 控件为 `private`，Presenter 无法直接访问
+- 项目约束禁止修改 `*.Designer.cs` 文件，无法将控件改为 `internal` 或 `public`
+- 接口方法提供了解耦的 UI 记录机制，符合 MVP 架构
 
 **替代方案考虑**：
-- **通过接口方法**：历史尝试证明这种方式容易失效
-- **使用事件机制**：过度设计，增加复杂度
-- **创建专用记录服务**：超出本次重构范围
+- **直接访问控件**：需要修改 Designer.cs，违反项目约束
+- **事件机制**：过度设计
 
-### Decision 3: 移除 `IMainFormView` 接口中的记录方法
-**决策**：删除 `IMainFormView.RecordCorrectAnswer()` 和 `IMainFormView.RecordWrongAnswer()` 方法定义
+### Decision 3: 保留而非移除 IMainFormView 接口中的记录方法
+**决策**：保留 `IMainFormView.RecordCorrectAnswer()` 和 `IMainFormView.RecordWrongAnswer()` 方法（参见 Decision 2）。仅保留已弃用的 Form1 接口实现在代码中供参考。
 
 **理由**：
-- 这些方法在重构后不再被调用
-- 保留未使用的接口方法会误导未来的维护者
-- 接口设计应该反映实际的职责划分
+- Presenter 必须通过这些接口方法与 View 的私有控件交互
+- 这些接口方法功能正确（在探索阶段已验证），只是之前未被调用路径触发
 
 **替代方案考虑**：
-- **保留接口方法**：会导致维护混淆
-- **标记为 `[Obsolete]`**：虽然可行，但删除更清晰
+- **移除接口方法**：Presenter 无法记录结果到 UI
+- **标记为 `[Obsolete]`**：虽然可行，但会误导维护者
 
 ### Decision 4: 创建两个新的 OpenSpec 规范
 **决策**：创建 `ui-architecture` 和 `answer-validation` 两个独立的规范

@@ -212,18 +212,16 @@ BB Math 是一款面向儿童的算术练习软件，支持加法、减法、乘
 4. 查看测试结果
 
 ### 详细的测试说明
-查看 [测试说明](docs/TESTING.md) 了解更多关于测试的信息，包括测试分类、常见问题解答等。
+测试包含常量类测试、异常处理测试、配置管理测试、数学运算测试、日志系统测试、文件服务测试，共 219 个测试用例。
 
 ## 文档
 
 ### 核心文档
-- [开发规范](docs/CODING_STANDARDS.md) - 快速参考和核心约束
-- [API 参考](docs/API_REFERENCE.md) - 类和接口详细定义
+- [AI 开发约束](openspec/config.yaml) - 技术栈、命名规范、项目约束
 - [资源版权声明](Resources/README.txt) - 原作者商品展示资源的版权说明
 
 ### OpenSpec 规范
-- [OpenSpec 使用指南](openspec/AGENTS.md) - 规范管理和提案流程
-- [项目总体规范](openspec/project.md) - 技术栈和开发约定
+- [AI 开发约束](openspec/config.yaml) - 技术栈、命名规范、项目约定
 - [功能规范目录](openspec/specs/) - 各功能模块详细规范（配置管理、金币系统、暂停机制等）
 
 ## 项目结构
@@ -249,14 +247,9 @@ BB_Math/
 │   └── ...
 ├── openspec/          # 规范管理
 │   ├── specs/         # 功能规范
-│   ├── changes/       # 变更提案
-│   ├── archive/       # 已归档的变更
-│   ├── AGENTS.md      # OpenSpec 使用指南
-│   └── project.md     # 项目总体规范
-├── docs/              # 技术文档
-│   ├── CODING_STANDARDS.md  # 开发规范快速参考
-│   ├── API_REFERENCE.md     # API 接口参考
-│   └── TESTING.md          # 测试说明
+│   └── changes/       # 变更提案（含 archive/）
+├── docs/              # 截图资源
+│   └── images/        # 界面截图
 ├── Properties/        # 项目属性
 ├── Resources/         # 资源文件（包含原作者商品展示资源）
 │   ├── README.txt    # 资源版权声明
@@ -344,12 +337,12 @@ vstest.console.exe BBMath.Tests\bin\Debug\BBMath.Tests.dll /Logger:trx;LogFileNa
 
 ### OpenSpec 工作流
 1. 阅读相关规范文档
-2. 创建变更提案：`openspec/changes/[change-id]/`
-3. 实现功能，更新 tasks.md
+2. 创建变更提案：使用 `/opsx-propose <名称>` 或 `openspec-cn` 命令
+3. 实现功能：使用 `/opsx-apply [名称]`
 4. 运行测试确保通过
-5. 归档变更：`openspec/archive/YYYY-MM-DD-[change-id]/`
+5. 归档变更：使用 `/opsx-archive [名称]`
 
-详细流程请参考：[openspec/AGENTS.md](openspec/AGENTS.md)
+详细流程请参考：`openspec/config.yaml` OpenSpec 工作流备忘
 
 ### VS Code 环境约束
 - ✅ **允许**：代码编写、文档维护、文件读写、文本搜索、规范管理
@@ -389,7 +382,7 @@ vstest.console.exe BBMath.Tests\bin\Debug\BBMath.Tests.dll /Logger:trx;LogFileNa
 
 1. Fork 本仓库
 2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 使用 OpenSpec 流程创建变更提案（详见 [openspec/AGENTS.md](openspec/AGENTS.md)）
+3. 使用 OpenSpec 流程创建变更提案（详见 `openspec/config.yaml`）
 4. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 5. 推送到分支 (`git push origin feature/AmazingFeature`)
 6. 开启 Pull Request
@@ -459,13 +452,13 @@ vstest.console.exe BBMath.Tests\bin\Debug\BBMath.Tests.dll /Logger:trx;LogFileNa
    ```
 
 3. **阅读规范文档**
-   - [开发规范](docs/CODING_STANDARDS.md)
-   - [OpenSpec 使用指南](openspec/AGENTS.md)
+   - [AI 开发约束](openspec/config.yaml)
+   - [OpenSpec 开发约束](openspec/config.yaml)
    - 相关功能规范（`openspec/specs/`）
 
 4. **创建 OpenSpec 提案**（如需要）
    - 新功能或重大变更必须创建提案
-   - 按照 `openspec/AGENTS.md` 的流程操作
+   - 按照 `openspec/config.yaml` 中的 OpenSpec 工作流操作
 
 5. **编写代码并测试**
    - 在 Visual Studio 中运行测试（测试 → 测试资源管理器 → 运行全部）
@@ -544,7 +537,7 @@ vstest.console.exe BBMath.Tests\bin\Debug\BBMath.Tests.dll /Logger:trx;LogFileNa
 ### 支持渠道
 
 - **GitHub Issues**：Bug 报告、功能请求、问题讨论
-- **文档**：[README](README.md)、[开发规范](docs/CODING_STANDARDS.md)、[API 参考](docs/API_REFERENCE.md)
+- **文档**：[README](README.md)、[AI 开发约束](openspec/config.yaml)
 
 ### 常见问题
 

@@ -62,12 +62,12 @@
 
 ## 检查清单
 
-- [ ] 我的代码遵循项目的编码规范（见 [docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md)）
+- [ ] 我的代码遵循项目的编码规范（见 [openspec/config.yaml](openspec/config.yaml)）
 - [ ] 我已执行代码自测
 - [ ] 我已更新相关文档（如果适用）
 - [ ] 所有单元测试通过
 - [ ] 新功能包含相应的测试用例
-- [ ] 我已阅读并理解 [OpenSpec 工作流程](openspec/AGENTS.md)
+- [ ] 我已阅读并理解 [OpenSpec 工作流程](openspec/config.yaml)
 
 ## 截图
 如果 UI 有变更，请添加前后对比截图：
